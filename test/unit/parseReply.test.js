@@ -80,6 +80,67 @@ describe('protocol', function () {
       );
     });
 
+    it('parses large RESERVED reply', function () {
+      let values = {};
+      for (let i = 0; i < 10000; i++) {
+        values[Math.random().toString()] = Math.random().toString();
+      }
+
+      let data = new Buffer(JSON.stringify(values));
+
+      let full = Buffer.concat([
+        new Buffer(`RESERVED 1337 ${data.length}`),
+        CRLF,
+        data,
+        CRLF
+      ]);
+
+      let buffers = [
+        full.slice(0, 200000),
+        full.slice(200000)
+      ];
+
+      let [remainder, result] = protocol.parseReply(buffers[0]);
+      expect(result, 'to equal', null);
+      expect(remainder.length, 'to equal', buffers[0].length);
+
+      expect(
+        protocol.parseReply(Buffer.concat([remainder, buffers[1]])),
+        'to equal',
+        [null, {
+          reply: 'RESERVED',
+          args: {
+            id: 1337,
+            bytes: data.length,
+            data: data
+          }
+        }]
+      );
+    });
+
+    it('parses RESERVED reply containg CRLF', function () {
+      let data = new Buffer('yolo\r\nyolo');
+      let buffer = Buffer.concat([
+        new Buffer(`RESERVED 1234 ${data.length}`),
+        CRLF,
+        data,
+        CRLF
+      ]);
+
+      expect(
+        protocol.parseReply(buffer),
+        'to equal',
+        [null, {
+          reply: 'RESERVED',
+          args: {
+            id: 1234,
+            bytes: data.length,
+            data: data
+          }
+        }]
+      );
+    });
+
     it('parses multiple replies in buffer', function () {
       let tube = Math.random().toString();
       let buffer = new Buffer(`USING ${tube}\r\nKICKED 2\r\n`);

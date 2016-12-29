@@ -82,7 +82,7 @@ export default class BeanstalkdProtocol {
     let identifier = parts[0].shift();
     let spec = specMap[identifier];
     let remainder = buffer.length > boundary + CRLF.length ? buffer.slice(boundary + CRLF.length) : null;
-    let args;
+    let args = parts[0];
 
     if (!spec) {
       return [remainder, {
@@ -93,20 +93,21 @@ export default class BeanstalkdProtocol {
     }
 
     if (spec.parts.length > 1) {
-      for (let i = 0; i < (spec.parts.length - 1); i++) {
+      for (let i = 1; i < spec.parts.length; i++) {
         if (!remainder) return [buffer, null];
+        let previous = i && spec.parts[i - 1] || null;
+        let bytes = previous[previous.length - 1] === 'bytes' && args[args.length - 1] || null;
 
-        let boundary = remainder.indexOf(CRLF);
+        if (bytes > remainder.length) return [buffer, null];
+        let boundary = bytes || remainder.indexOf(CRLF);
         if (boundary === -1) return [buffer, null];
 
         // TODO: Support non buffer args
-        parts.push(remainder.slice(0, boundary));
+        let part = remainder.slice(0, boundary);
         remainder = remainder.length > boundary + CRLF.length ? buffer.slice(remainder + CRLF.length) : null;
-      }
 
-      args = Array.prototype.concat.apply([], parts);
-    } else {
-      args = parts[0];
+        args.push(part);
+      }
     }
 
     return [remainder, {

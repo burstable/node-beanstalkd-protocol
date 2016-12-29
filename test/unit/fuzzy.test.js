@@ -45,6 +45,14 @@ describe('protocol', function () {
         return collection;
       }, array ? [] : {});
 
+      if (spec.args.indexOf('bytes') !== -1) {
+        if (array) {
+          args[spec.args.indexOf('bytes')] = args[spec.args.indexOf('data')].length;
+        } else {
+          args.bytes = args.data.length;
+        }
+      }
+
       return args;
     }
 
