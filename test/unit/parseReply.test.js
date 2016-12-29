@@ -95,17 +95,21 @@ describe('protocol', function () {
         CRLF
       ]);
 
-      let buffers = [
-        full.slice(0, 200000),
-        full.slice(200000)
-      ];
+      let buffer = new Buffer(0);
+      for (let i = 0; i < full.length; i += 65536) {
+        let piece = full.slice(i, i + 65536);
 
-      let [remainder, result] = protocol.parseReply(buffers[0]);
-      expect(result, 'to equal', null);
-      expect(remainder.length, 'to equal', buffers[0].length);
+        if (piece.length === 65536) {
+          let [remainder, result] = protocol.parseReply(Buffer.concat([buffer, piece]));
+          expect(result, 'to equal', null);
+          buffer = remainder;
+        } else {
+          buffer = Buffer.concat([buffer, piece]);
+        }
+        }
 
       expect(
-        protocol.parseReply(Buffer.concat([remainder, buffers[1]])),
+        protocol.parseReply(buffer),
         'to equal',
         [null, {
           reply: 'RESERVED',
