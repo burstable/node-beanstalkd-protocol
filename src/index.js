@@ -1,14 +1,19 @@
 import {CRLF, SPACE, reduce} from './misc';
-import {commands, types} from './default';
+import {commands, replies, types} from './default';
 import assert from 'assert';
 
 export default class BeanstalkdProtocol {
   constructor() {
     this.types = types;
     this.commandMap = {};
+    this.replyMap = {};
 
     commands.forEach((signature) => {
       this.addCommand(signature);
+    });
+
+    replies.forEach((signature) => {
+      this.addReply(signature);
     });
   }
 
@@ -16,16 +21,16 @@ export default class BeanstalkdProtocol {
     this.types[key] = type;
   }
 
-  addCommand(signature) {
+  add(signature, key) {
     if (signature.substr(-2) !== CRLF.toString()) {
-      throw new Error(`command ${signature} does not end in CRLF`);
+      throw new Error(`${key} ${signature} does not end in CRLF`);
     }
 
     let parts = signature.split(CRLF.toString()).slice(0, -1).map(part => {
       return part.split(SPACE.toString());
     });
 
-    let command = parts[0].shift();
+    let identifier = parts[0].shift();
 
     parts = parts.map(part => {
       return part.map(arg => {
@@ -36,32 +41,46 @@ export default class BeanstalkdProtocol {
       });
     });
 
-    this.commandMap[command] = {
-      args: parts.reduce((args, part) => args.concat(part), []),
-      parts
-    };
+    let args = parts.reduce((args, part) => args.concat(part), []);
+    let existing = this[key + 'Map'][identifier];
+
+    if (!existing) {
+      this[key + 'Map'][identifier] = {
+        args: args,
+        parts,
+        argsOptional: false
+      };
+    } else if (existing.args.length !== args.length) {
+      existing.argsOptional = true;
+
+      if (!existing.args.length && args.length) {
+        existing.args = args;
+      }
+    }
   }
 
-  parseCommand(buffer) {
+  parse(buffer, key) {
     if (buffer.length < 4) return [buffer, null];
 
     let boundary = buffer.indexOf(CRLF);
     if (boundary === -1) return [buffer, null];
 
-    if (buffer.indexOf(' ') === -1) {
-      let command = buffer.slice(0, boundary).toString();
+    let specMap = this[key + 'Map'];
 
-      if (this.commandMap[command]) {
+    if (buffer.indexOf(' ') === -1) {
+      let identifier = buffer.slice(0, boundary).toString();
+
+      if (specMap[identifier]) {
         return [null, {
-          command,
+          [key]: identifier,
           args: {}
         }];
       }
     }
 
     let parts = [buffer.slice(0, boundary).toString().split(SPACE.toString())];
-    let command = parts[0].shift();
-    let spec = this.commandMap[command];
+    let identifier = parts[0].shift();
+    let spec = specMap[identifier];
     let remainder = buffer.length > boundary + CRLF.length ? buffer.slice(boundary + CRLF.length) : null;
     let args;
 
@@ -83,34 +102,35 @@ export default class BeanstalkdProtocol {
     }
 
     return [remainder, {
-      command,
+      [key]: identifier,
       args: convertArgs(spec, args)
     }];
   }
 
-  buildCommand(command, args) {
-    let spec = this.commandMap[command]
+  build(identifier, args, key) {
+    let spec = this[key + 'Map'][identifier]
       , isArray = args && Array.isArray(args)
       , expectsArgsLength = spec.args.length
+      , argsOptional = spec.argsOptional
       , argsLength = args && (isArray ? args.length : Object.keys(args).length);
 
-    assert(!expectsArgsLength || args, `${command} requires args`);
-    assert(!args || expectsArgsLength === argsLength, `${command} expects ${spec.args.length} args`);
-
-    if (!args || !argsLength) {
-      return new Buffer(command + CRLF);
-    }
-
-    if (!isArray) {
+    if (!isArray && args) {
       args = spec.args.map(key => args[key]);
     }
 
+    assert(argsOptional || !expectsArgsLength || (args || args.length), `${identifier} requires args`);
+    assert(argsOptional || !args || !args.length || expectsArgsLength === argsLength, `${identifier} expects ${spec.args.length} args`);
+
+    if (!args || !argsLength) {
+      return new Buffer(identifier + CRLF);
+    }
+
     if (spec.parts.length < 2) {
-      return new Buffer(command + ' ' + args.join(' ') + CRLF);
+      return new Buffer(identifier + ' ' + args.join(' ') + CRLF);
     }
 
     let buffers = [
-      new Buffer(command + ' '),
+      new Buffer(identifier + ' '),
     ];
 
     let offset = 0;
@@ -135,6 +155,18 @@ export default class BeanstalkdProtocol {
     return Buffer.concat(buffers);
   }
 
+  addCommand(signature) {
+    this.add(signature, 'command');
+  }
+
+  parseCommand(buffer) {
+    return this.parse(buffer, 'command');
+  }
+
+  buildCommand(command, args) {
+    return this.build(command, args, 'command');
+  }
+
   buildPut(args) {
     let isArray = Array.isArray(args);
     if (!isArray) {
@@ -147,6 +179,18 @@ export default class BeanstalkdProtocol {
     args.push(body);
 
     return this.buildCommand('put', args);
+  }
+
+  addReply(signature) {
+    this.add(signature, 'reply');
+  }
+
+  parseReply(buffer) {
+    return this.parse(buffer, 'reply');
+  }
+
+  buildReply(reply, args) {
+    return this.build(reply, args, 'reply');
   }
 }
 

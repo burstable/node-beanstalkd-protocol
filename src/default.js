@@ -25,6 +25,29 @@ export const commands = [
   'pause-tube <tube> <delay>\r\n'
 ];
 
+export const replies = [
+  'INSERTED <id>\r\n',
+  'BURIED <id>\r\n',
+  'EXPECTED_CRLF\r\n',
+  'JOB_TOO_BIG\r\n',
+  'DRAINING\r\n',
+  'USING <tube>\r\n',
+  'RESERVED <id> <bytes>\r\n<data>\r\n',
+  'FOUND <id> <bytes>\r\n<data>\r\n',
+  'DEADLINE_SOON\r\n',
+  'TIMED_OUT\r\n',
+  'DELETED\r\n',
+  'NOT_FOUND\r\n',
+  'RELEASED\r\n',
+  'BURIED\r\n',
+  'TOUCHED\r\n',
+  'WATCHING <count>\r\n',
+  'KICKED\r\n',
+  'KICKED <count>\r\n',
+  'OK <bytes>\r\n<data>\r\n',
+  'PAUSED\r\n'
+];
+
 export const types = {
   pri: Number,
   delay: Number,
@@ -34,5 +57,6 @@ export const types = {
   id: Number,
   tube: String,
   bound: Number,
-  seconds: Number
+  seconds: Number,
+  count: Number
 };
