@@ -39,6 +39,10 @@ describe('protocol', function () {
       expect(protocol.parseReply(new Buffer(`KICKED ${count}\r\n`)), 'to equal', [null, {reply: 'KICKED', args: {count}}]);
     });
 
+    it('parses unknown ERROR', function () {
+      expect(protocol.parseReply(new Buffer('UNKNOWN_ERROR\r\n')), 'to equal', [null, {reply: 'UNKNOWN_ERROR', args: {}, unknown: true}]);
+    });
+
     it('parses RESERVED reply over two buffers', function () {
       let data = new Buffer(JSON.stringify({
         [Math.random().toString()]: Math.random().toString(),

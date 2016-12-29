@@ -84,6 +84,14 @@ export default class BeanstalkdProtocol {
     let remainder = buffer.length > boundary + CRLF.length ? buffer.slice(boundary + CRLF.length) : null;
     let args;
 
+    if (!spec) {
+      return [remainder, {
+        [key]: identifier,
+        args: {},
+        unknown: true
+      }];
+    }
+
     if (spec.parts.length > 1) {
       for (let i = 0; i < (spec.parts.length - 1); i++) {
         if (!remainder) return [buffer, null];
