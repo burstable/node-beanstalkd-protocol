@@ -106,7 +106,7 @@ describe('protocol', function () {
         } else {
           buffer = Buffer.concat([buffer, piece]);
         }
-        }
+      }
 
       expect(
         protocol.parseReply(buffer),
