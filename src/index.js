@@ -96,7 +96,7 @@ export default class BeanstalkdProtocol {
       for (let i = 1; i < spec.parts.length; i++) {
         if (!remainder) return [buffer, null];
         let previous = i && spec.parts[i - 1] || null;
-        let bytes = previous[previous.length - 1] === 'bytes' && args[args.length - 1] || null;
+        let bytes = previous[previous.length - 1] === 'bytes' && parseInt(args[args.length - 1], 10) || null;
 
         if (bytes > remainder.length) return [buffer, null];
         let boundary = bytes || remainder.indexOf(CRLF);
@@ -104,7 +104,7 @@ export default class BeanstalkdProtocol {
 
         // TODO: Support non buffer args
         let part = remainder.slice(0, boundary);
-        remainder = remainder.length > boundary + CRLF.length ? buffer.slice(remainder + CRLF.length) : null;
+        remainder = remainder.length > boundary + CRLF.length ? remainder.slice(remainder + CRLF.length) : null;
 
         args.push(part);
       }

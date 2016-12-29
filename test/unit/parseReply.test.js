@@ -172,5 +172,21 @@ describe('protocol', function () {
         }]
       );
     });
+
+    it('parses two stats replies in a single buffer', function () {
+      let buffer = new Buffer(
+        'OK 927' +
+        '\r\n' +
+        '---\ncurrent-jobs-urgent: 202\ncurrent-jobs-ready: 202\ncurrent-jobs-reserved: 0\ncurrent-jobs-delayed: 0\ncurrent-jobs-buried: 0\ncmd-put: 216\ncmd-peek: 15\ncmd-peek-ready: 0\ncmd-peek-delayed: 0\ncmd-peek-buried: 0\ncmd-reserve: 0\ncmd-reserve-with-timeout: 201\ncmd-delete: 14\ncmd-release: 0\ncmd-use: 181\ncmd-watch: 180\ncmd-ignore: 178\ncmd-bury: 0\ncmd-kick: 0\ncmd-touch: 0\ncmd-stats: 85\ncmd-stats-job: 0\ncmd-stats-tube: 0\ncmd-list-tubes: 0\ncmd-list-tube-used: 18\ncmd-list-tubes-watched: 18\ncmd-pause-tube: 0\njob-timeouts: 0\ntotal-jobs: 216\nmax-job-size: 5000000\ncurrent-tubes: 128\ncurrent-connections: 1\ncurrent-producers: 0\ncurrent-workers: 0\ncurrent-waiting: 0\ntotal-connections: 519\npid: 1\nversion: 1.10\nrusage-utime: 0.064000\nrusage-stime: 0.412000\nuptime: 4766\nbinlog-oldest-index: 0\nbinlog-current-index: 0\nbinlog-records-migrated: 0\nbinlog-records-written: 0\nbinlog-max-size: 10485760\nid: eb22a9da2b666fa1hostname: 2656fb9c580b' +
+        '\r\n' +
+        'OK 927' +
+        '\r\n' +
+        '---\ncurrent-jobs-urgent: 202\ncurrent-jobs-ready: 202\ncurrent-jobs-reserved: 0\ncurrent-jobs-delayed: 0\ncurrent-jobs-buried: 0\ncmd-put: 216\ncmd-peek: 15\ncmd-peek-ready: 0\ncmd-peek-delayed: 0\ncmd-peek-buried: 0\ncmd-reserve: 0\ncmd-reserve-with-timeout: 201\ncmd-delete: 14\ncmd-release: 0\ncmd-use: 181\ncmd-watch: 180\ncmd-ignore: 178\ncmd-bury: 0\ncmd-kick: 0\ncmd-touch: 0\ncmd-stats: 85\ncmd-stats-job: 0\ncmd-stats-tube: 0\ncmd-list-tubes: 0\ncmd-list-tube-used: 18\ncmd-list-tubes-watched: 18\ncmd-pause-tube: 0\njob-timeouts: 0\ntotal-jobs: 216\nmax-job-size: 5000000\ncurrent-tubes: 128\ncurrent-connections: 1\ncurrent-producers: 0\ncurrent-workers: 0\ncurrent-waiting: 0\ntotal-connections: 519\npid: 1\nversion: 1.10\nrusage-utime: 0.064000\nrusage-stime: 0.412000\nuptime: 4766\nbinlog-oldest-index: 0\nbinlog-current-index: 0\nbinlog-records-migrated: 0\nbinlog-records-written: 0\nbinlog-max-size: 10485760\nid: eb22a9da2b666fa1hostname: 2656fb9c580b' +
+        '\r\n'
+      );
+
+      let [remainder, result] = protocol.parseReply(buffer);
+      expect(remainder, 'not to equal', null);
+    });
   });
 });
