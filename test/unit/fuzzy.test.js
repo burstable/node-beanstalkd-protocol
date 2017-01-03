@@ -66,7 +66,7 @@ describe('protocol', function () {
             null,
             {
               command,
-              args: convertArgs(protocol.commandMap[command], args)
+              args: convertArgs(protocol.commandMap[command], args, protocol.types)
             }
           ]);
         });
@@ -118,7 +118,7 @@ describe('protocol', function () {
             null,
             {
               reply,
-              args: convertArgs(protocol.replyMap[reply], args)
+              args: convertArgs(protocol.replyMap[reply], args, protocol.types)
             }
           ]);
         });

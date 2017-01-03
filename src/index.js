@@ -4,7 +4,11 @@ import assert from 'assert';
 
 export default class BeanstalkdProtocol {
   constructor() {
-    this.types = types;
+    this.reset();
+  }
+
+  reset() {
+    this.types = Object.assign({}, types);
     this.commandMap = {};
     this.replyMap = {};
 
@@ -112,7 +116,7 @@ export default class BeanstalkdProtocol {
 
     return [remainder, {
       [key]: identifier,
-      args: convertArgs(spec, args)
+      args: convertArgs(spec, args, this.types)
     }];
   }
 
@@ -203,7 +207,7 @@ export default class BeanstalkdProtocol {
   }
 }
 
-export function convertArgs(spec, args) {
+export function convertArgs(spec, args, types) {
   return reduce(args, function (args, arg, i) {
     let key = spec.args[i];
     args[key] = types[key](arg);
