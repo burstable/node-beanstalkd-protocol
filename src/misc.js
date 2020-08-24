@@ -1,5 +1,5 @@
-export const CRLF = new Buffer([0x0d, 0x0a]);
-export const SPACE = new Buffer(' ');
+export const CRLF  = Buffer.from([0x0d, 0x0a]);  // '\r\n'
+export const SPACE = Buffer.from([0x20]);        // ' '
 
 export function reduce(collection, callback, accumulator) {
   if (!collection) return accumulator;
