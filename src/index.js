@@ -135,15 +135,15 @@ export default class BeanstalkdProtocol {
     assert(argsOptional || !args || !args.length || expectsArgsLength === argsLength, `${identifier} expects ${spec.args.length} args`);
 
     if (!args || !argsLength) {
-      return new Buffer(identifier + CRLF);
+      return Buffer.from(identifier + CRLF);
     }
 
     if (spec.parts.length < 2) {
-      return new Buffer(identifier + ' ' + args.join(' ') + CRLF);
+      return Buffer.from(identifier + ' ' + args.join(' ') + CRLF);
     }
 
     let buffers = [
-      new Buffer(identifier + ' '),
+      Buffer.from(identifier + ' '),
     ];
 
     let offset = 0;
@@ -159,7 +159,7 @@ export default class BeanstalkdProtocol {
         if (Buffer.isBuffer(arg)) {
           buffers.push(arg);
         } else {
-          buffers.push(new Buffer(arg.toString()));
+          buffers.push(Buffer.from(arg.toString()));
         }
       });
       buffers.push(CRLF);
